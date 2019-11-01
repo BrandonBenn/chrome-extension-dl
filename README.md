@@ -6,8 +6,6 @@ that makes downloading chrome extensions convenient.
 It is intended to be used with [ungoogled chromium](https://github.com/Eloston/ungoogled-chromium).
 
 <br>
-<br>
-<br>
 
 ## Usage
 
