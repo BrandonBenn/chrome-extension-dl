@@ -1,0 +1,99 @@
+#!/bin/sh
+# A script that downloads chrome extensions
+export LC_ALL=C
+magenta="\033[35;1m"
+red="\033[31m"
+esc="\033[m"
+
+CHROME_EXTENSIONS_DIR=${CHROME_EXTENSIONS_DIR:=${XDG_DATA_HOME:=$HOME/.local/share}/chrome-extensions}
+
+general_help() {
+    printf "%s
+    ${red}NAME${esc}
+    ${magenta}$(basename "$0")${esc} - install chrome extensions
+
+    ${red}SYNOPSIS${esc}
+    ${magenta}$(basename "$0")${esc} [url]
+    ${magenta}$(basename "$0")${esc} --presets [file]
+    ${magenta}$(basename "$0")${esc} update
+
+    ${red}DESCRIPTION${esc}
+    ${magenta}$(basename "$0")${esc} Download extensions from chrome webstore.
+
+    Set CHROME_EXTENSIONS_DIR to change extensions folder.\n"
+    install_help
+}
+
+install_help() {
+    printf "%s\n
+    ${red}Install Guide:${esc}
+    1. Visit chrome://extensions in your browser.
+    2. Ensure that the Developer mode checkbox in the top right-hand corner is checked.
+    3. Click Load unpacked extension... to pop up a file-selection dialog.
+    4. Navigate to $CHROME_EXTENSIONS_DIR/, and select it.\n"
+}
+
+
+die() {
+    printf "${red}Error${esc}: %s\n" "$1" >&2;
+    exit 1;
+}
+
+webstore_url() {
+    echo "https://clients2.google.com/service/update2/crx?response=redirect&prodversion=49.0&x=id%3D$1%26installsource%3Dondemand%26uc"
+}
+
+parse_url() {
+    download_extension "$(echo "$1" | grep -oP '[_a-zA-Z0-9]{30,}')"
+}
+
+download_extension() {
+    extension_file="$(mktemp "${TMPDIR:-/tmp/}$1.XXXXXXXXXXXX.zip")"
+    printf "\n Downloading extension %s...\n" "$1"
+    curl -fsSL "$(webstore_url "$1")" --output "$extension_file" || die "Unable to download extension"
+    extract_extension "$1"
+    rm -fr "$extension_file"
+}
+
+extract_extension() {
+    nohup rm -fr "$CHROME_EXTENSIONS_DIR/${1:?}" > /dev/null 2>&1 ||:
+    mkdir -p "$CHROME_EXTENSIONS_DIR/$1"
+    nohup unzip -q "$extension_file" -d "$CHROME_EXTENSIONS_DIR/$1" > /dev/null 2>&1
+    printf "\n Extension installed to directory %s\n" "$CHROME_EXTENSIONS_DIR/$1"
+}
+
+update_extensions() {
+    cd "$CHROME_EXTENSIONS_DIR" || die "Extensions directory does not exist"
+    for extension in */; do
+        [ -d "$extension" ] || continue
+        download_extension "$extension"
+    done
+}
+
+presets_file() {
+    [ -f "$1" ] || return
+    while IFS= read -r line || [ -n "$line" ]; do
+        parse_url "$line"
+    done < "$1"
+    install_help
+}
+
+main() {
+    [ "$#" -gt 0 ] || general_help
+    for input in "$@"; do
+        shift "$(($# ? 1 : 0))"
+        case "$input" in
+            (-h|--help|help)
+                general_help        ;;
+            (up|update)
+                update_extensions   ;;
+            (-p|--presets)
+                presets_file "$1"   ;;
+            (*)
+                parse_url "$input"
+                install_help        ;;
+        esac
+    done
+}
+
+main "$@"
