@@ -2,6 +2,7 @@
 # A script that downloads chrome extensions
 export LC_ALL=C
 magenta="\033[35;1m"
+green="\033[32;1m"
 red="\033[31m"
 esc="\033[m"
 
@@ -49,17 +50,17 @@ parse_url() {
 
 download_extension() {
     extension_file="$(mktemp "${TMPDIR:-/tmp/}$1.XXXXXXXXXXXX.zip")"
-    printf "\n${magenta}Downloading extension %s...${esc}\n" "$1"
-    curl -fsSL "$(webstore_url "$1")" --output "$extension_file" || die "Unable to download extension"
+    printf "\n - ${green}Downloading extension %s...${esc}\n" "$1"
+    curl -fsSL "$(webstore_url "$1")" --output "$extension_file" 2>&1 || die "Unable to download extension"
     extract_extension "$1"
     rm -fr "$extension_file"
 }
 
 extract_extension() {
-    nohup rm -fr "$CHROME_EXTENSIONS_DIR/${1:?}" > /dev/null 2>&1 ||:
+    rm -fr "$CHROME_EXTENSIONS_DIR/${1:?}" > /dev/null 2>&1 ||:
     mkdir -p "$CHROME_EXTENSIONS_DIR/$1"
-    nohup unzip -q "$extension_file" -d "$CHROME_EXTENSIONS_DIR/$1" > /dev/null 2>&1
-    printf "Extension installed to directory %s\n" "$CHROME_EXTENSIONS_DIR/$1"
+    unzip -q "$extension_file" -d "$CHROME_EXTENSIONS_DIR/$1" > /dev/null 2>&1
+    printf " Extension installed to directory %s\n" "$CHROME_EXTENSIONS_DIR/$1"
 }
 
 update_extensions() {
