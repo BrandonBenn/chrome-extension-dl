@@ -50,7 +50,7 @@ parse_url() {
 
 download_extension() {
     extension_file="$(mktemp "${TMPDIR:-/tmp/}$1.XXXXXXXXXXXX.zip")"
-    printf "\n - ${green}Downloading extension %s...${esc}\n" "$1"
+    printf "\n+ ${green}Downloading extension %s...${esc}\n" "$1"
     curl -fsSL "$(webstore_url "$1")" --output "$extension_file" 2>&1 || die "Unable to download extension"
     extract_extension "$1"
     rm -fr "$extension_file"
@@ -60,11 +60,12 @@ extract_extension() {
     rm -fr "$CHROME_EXTENSIONS_DIR/${1:?}" > /dev/null 2>&1 ||:
     mkdir -p "$CHROME_EXTENSIONS_DIR/$1"
     unzip -q "$extension_file" -d "$CHROME_EXTENSIONS_DIR/$1" > /dev/null 2>&1
-    printf " Extension installed to directory %s\n" "$CHROME_EXTENSIONS_DIR/$1"
+    printf "Extension installed to directory %s\n" "$CHROME_EXTENSIONS_DIR/$1"
 }
 
 update_extensions() {
     cd "$CHROME_EXTENSIONS_DIR" || die "Extensions directory does not exist"
+    printf "\n${red}%sUpdating extentions:${esc}"
     for extension in *; do
         [ -d "$extension" ] || continue
         download_extension "$extension"
