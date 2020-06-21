@@ -29,7 +29,7 @@ Install Guide:
 1. Visit chrome://extensions in your browser.
 2. Ensure that the Developer mode checkbox in the top right-hand corner is checked.
 3. Click Load unpacked extension... to pop up a file-selection dialog.
-4. Navigate to /home/th3lusive/.local/share/chrome-extensions/, and select it.
+4. Navigate to ~/.local/share/chrome-extensions/, and select it.
 ```
 
 ## Credit
